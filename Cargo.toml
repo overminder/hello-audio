@@ -1,0 +1,10 @@
+[package]
+name = "hello-portaudio"
+version = "0.1.0"
+authors = ["Yux <yux@pdx.edu>"]
+edition = "2018"
+
+[dependencies]
+portaudio = "*"
+itertools = "*"
+hound = "*"
