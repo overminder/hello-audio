@@ -1,5 +1,5 @@
 use portaudio as pa;
-use crate::music::Sound;
+use crate::types::Sound;
 
 const CHANNELS: i32 = 1;
 const SAMPLE_RATE: f64 = 44_100.0;

@@ -1,4 +1,4 @@
-use crate::music::Sound;
+use crate::types::Sound;
 
 pub fn save(s: impl Sound, name: &str) {
     let spec = hound::WavSpec {

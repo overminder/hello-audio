@@ -1,7 +1,7 @@
-use std::f64::consts::PI;
-use crate::geniter::GenIter;
-use itertools::Itertools;
-use itertools::EitherOrBoth::{Both, Left, Right};
+use crate::types::*;
+use crate::soundprim::*;
+
+// Old note notation
 
 pub fn kv545() -> impl Sound {
     let bass1 = vec![
@@ -47,77 +47,6 @@ pub fn little_star() -> impl Sound {
 }
 
 // Helpers
-
-const SAMPLE_RATE: f64 = 44_100.0;
-// Actually this is C5...
-const OCTAVE_4: &'static [f64] = &[
-    523.25,
-    587.33,
-    659.25,
-    698.46,
-    783.99,
-    880.00,
-    987.77,
-    1046.50,
-];
-
-pub trait Sound = Iterator<Item=f32> + 'static;
-
-pub fn sine(freq: f64, duration: f64) -> impl Sound {
-    let ticks = (SAMPLE_RATE * duration) as usize;
-    let step = freq / SAMPLE_RATE * 2.0 * PI;
-    GenIter(move || {
-        let mut x = 0_f64;
-        for _ in 0..ticks {
-            yield x.sin() as f32;
-            x += step;
-        }
-    })
-}
-
-pub fn mult(x: impl Sound, y: impl Sound) -> impl Sound {
-    x.zip(y).map(|(x, y)| x * y)
-}
-
-pub fn easing(e_dur: f64, duration: f64) -> impl Sound {
-    let ticks = (SAMPLE_RATE * duration) as usize;
-    let ease = (e_dur * SAMPLE_RATE) as usize;
-    let ease_step = 1_f32 / (ease as f32);
-    GenIter(move || {
-        let mut out = 0.;
-        for t in 0..ticks {
-            if t < ease {
-                out += ease_step;
-            } else if t > ticks - ease {
-                out -= ease_step;
-            }
-            yield out;
-        }
-    })
-}
-
-pub fn delay(duration: f64, s: impl Sound) -> impl Sound {
-    let ticks = (SAMPLE_RATE * duration) as usize;
-    GenIter(move || {
-        for _ in 0..ticks {
-            yield 0_f32;
-        }
-        for v in s {
-            yield v;
-        }
-    })
-}
-
-pub fn superpos(x: impl Sound, y: impl Sound) -> impl Sound {
-    x.zip_longest(y)
-     .map(|xy| {
-         match xy {
-             Left(x) => x,
-             Right(y) => y,
-             Both(x, y) => x + y,
-         }
-     })
-}
 
 #[derive(Clone)]
 enum N {
@@ -214,6 +143,7 @@ use self::N::*;
 struct SoundBuilder {
     res: Option<Box<Sound>>,
     t: f64,
+    bpm: usize,
 }
 
 impl SoundBuilder {
@@ -229,12 +159,16 @@ impl SoundBuilder {
                 self.build_n(n);
             }
 
-            self.t += n.dur();
+            self.t += n.dur() * self.dur_factor();
         }
     }
 
+    fn dur_factor(&self) -> f64 {
+        120. / self.bpm as f64
+    }
+
     fn build_n(&mut self, n: &N) {
-        let dur = n.dur();
+        let dur = n.dur() * self.dur_factor();
         let freq = n.freq();
         let sleep = dur * 0.1;
         let ease = dur * 0.05;
@@ -250,9 +184,14 @@ impl SoundBuilder {
 }
 
 fn gen_notes(ns: &[N]) -> impl Sound {
+    gen_notes_b(ns, 140)
+}
+
+fn gen_notes_b(ns: &[N], bpm: usize) -> impl Sound {
     let mut sb = SoundBuilder {
         res: None,
         t: 0.,
+        bpm,
     };
     sb.build(ns);
     sb.res.unwrap()
