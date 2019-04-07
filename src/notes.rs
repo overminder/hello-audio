@@ -22,7 +22,11 @@ pub fn build_track(tr: &Track) -> Box<dyn Sound> {
     };
 
     b.build(tr);
-    Box::new(b.res.unwrap())
+    if let Some(r) = b.res {
+        Box::new(r)
+    } else {
+        Box::new(None.into_iter())
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -30,17 +34,28 @@ pub struct Duration {
     // duration = 1/klass. 2 = half, 4 = quad, 8 = eighth
     pub klass: i32,
     pub dots: i8,
+    pub longer: Option<f64>,
 }
 
 impl Duration {
     fn dur(&self) -> f64 {
-        2.0 / (self.klass as f64) * 1.5_f64.powi(self.dots as i32)
+        let mult = self.longer.unwrap_or(1.);
+        mult * 2.0 / (self.klass as f64) * 1.5_f64.powi(self.dots as i32)
     }
 
     pub fn faster(&self, x: usize) -> Self {
         Self {
             klass: self.klass * x as i32,
             dots: self.dots,
+            longer: self.longer,
+        }
+    }
+
+    pub fn slower(&self, x: usize) -> Self {
+        Self {
+            klass: self.klass,
+            dots: self.dots,
+            longer: Some(self.longer.unwrap_or(1.) * x as f64),
         }
     }
 }

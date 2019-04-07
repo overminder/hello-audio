@@ -2,6 +2,7 @@
 pub trait Sound = Iterator<Item=f32> + 'static;
 
 pub const SAMPLE_RATE: f64 = 44_100.0;
+pub const HALF_STEP: f64 = 1.0595;
 
 // C5...C6
 pub const OCTAVE_4: &'static [f64] = &[
