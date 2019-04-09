@@ -152,7 +152,10 @@ impl Builder {
         let note_dur = dur - sleep;
         let amp = n.amp;
 
-        let thiz = mult(sine(freq, note_dur), easing(ease, note_dur))
+        let thiz = mult(
+            sine(freq, note_dur),
+            piano_envelope(note_dur))
+            // easing(ease, note_dur))
             .map(move |x| x * amp); 
         if let Some(v) = self.res.take() {
             self.res = Some(Box::new(superpos(v, delay(self.t, thiz))));

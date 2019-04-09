@@ -4,6 +4,7 @@
 
 mod geniter;
 mod playback;
+mod conc;
 mod to_wav;
 mod notes;
 mod notes_old;
@@ -14,10 +15,12 @@ mod notation;
 fn play_sheet() {
     use std::fs::File;
 
-    let sh = notation::read_sheet(File::open("kv545-m3.ss").unwrap());
+    let sh = notation::read_sheet(File::open("kv545.ss").unwrap());
     let m = notes::build_sheet(&sh).map(|x| x * 0.1);
+    // to_wav::save(m, "kv545.wav");
     // let m = m.collect::<Vec<_>>().into_iter();
-    playback::play(m).unwrap();
+    // playback::play(m).unwrap();
+    conc::buffer_playback(m);
 }
 
 fn main() {

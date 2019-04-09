@@ -20,6 +20,26 @@ pub fn mult(x: impl Sound, y: impl Sound) -> impl Sound {
     x.zip(y).map(|(x, y)| x * y)
 }
 
+pub fn piano_envelope(duration: f64) -> impl Sound {
+    let attack = duration * 0.1;
+    let decay = duration * 0.05;
+    let sustain = duration * 0.7;
+    let release = duration * 0.15;
+    interpolate_to(0., 1.2, attack)
+        .chain(interpolate_to(1.2, 1., decay))
+        .chain(interpolate_to(1., 0.7, sustain))
+        .chain(interpolate_to(0.7, 0., release))
+}
+
+fn interpolate_to(y0: f64, y1: f64, t: f64) -> impl Sound {
+    let ticks = (t * SAMPLE_RATE) as usize;
+    let dy = y1 - y0;
+    (0..ticks).map(move |t| {
+        (y0 + (t as f64 / ticks as f64) * dy) as f32
+    })
+}
+
+// Very simple easing.
 pub fn easing(e_dur: f64, duration: f64) -> impl Sound {
     let ticks = (SAMPLE_RATE * duration) as usize;
     let ease = (e_dur * SAMPLE_RATE) as usize;
